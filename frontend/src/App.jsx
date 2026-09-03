@@ -56,6 +56,8 @@ function App() {
 
   const handleToggle = async (task) => {
     try {
+      setError("");
+
       const response = await updateTask(task._id, {
         title: task.title,
         description: task.description,
@@ -74,6 +76,8 @@ function App() {
 
   const handleDelete = async (id) => {
     try {
+      setError("");
+
       await deleteTask(id);
 
       setTasks((currentTasks) =>
@@ -85,54 +89,93 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Personal Task Manager</h1>
+    <div className="app-container">
+      <header className="app-header">
+        <p className="app-label">TASK MANAGEMENT</p>
+        <h1>Personal Task Manager</h1>
+        <p className="app-subtitle">
+          Organize your work and keep track of your daily tasks.
+        </p>
+      </header>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter task title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
+      <main>
+        <form className="task-form" onSubmit={handleSubmit}>
+          <h2>Add New Task</h2>
 
-        <textarea
-          placeholder="Enter task description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-        />
+          <input
+            type="text"
+            placeholder="Enter task title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
 
-        <button type="submit">Add Task</button>
-      </form>
+          <textarea
+            placeholder="Enter task description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
 
-      {loading && <p>Loading tasks...</p>}
+          <button type="submit">Add Task</button>
+        </form>
 
-      {error && <p>{error}</p>}
+        {loading && <p className="message">Loading tasks...</p>}
 
-      {!loading && !error && tasks.length === 0 && (
-        <p>No tasks available.</p>
-      )}
+        {error && <p className="error-message">{error}</p>}
 
-      {!loading &&
-        tasks.map((task) => (
-          <div key={task._id}>
-            <h2>{task.title}</h2>
-
-            <p>{task.description}</p>
-
-            <p>
-              Status: {task.completed ? "Completed" : "Pending"}
-            </p>
-
-            <button onClick={() => handleToggle(task)}>
-              {task.completed ? "Mark Pending" : "Mark Completed"}
-            </button>
-
-            <button onClick={() => handleDelete(task._id)}>
-              Delete
-            </button>
+        {!loading && !error && tasks.length === 0 && (
+          <div className="empty-state">
+            <h2>No Tasks Yet</h2>
+            <p>Create your first task using the form above.</p>
           </div>
-        ))}
+        )}
+
+        {!loading && tasks.length > 0 && (
+          <section className="task-section">
+            <div className="section-header">
+              <h2>Your Tasks</h2>
+              <span>{tasks.length} task{tasks.length !== 1 ? "s" : ""}</span>
+            </div>
+
+            <div className="task-list">
+              {tasks.map((task) => (
+                <article
+                  className={`task-card ${
+                    task.completed ? "completed" : ""
+                  }`}
+                  key={task._id}
+                >
+                  <div className="task-content">
+                    <h3>{task.title}</h3>
+
+                    {task.description && (
+                      <p>{task.description}</p>
+                    )}
+
+                    <span className="task-status">
+                      {task.completed ? "Completed" : "Pending"}
+                    </span>
+                  </div>
+
+                  <div className="task-actions">
+                    <button onClick={() => handleToggle(task)}>
+                      {task.completed
+                        ? "Mark Pending"
+                        : "Mark Completed"}
+                    </button>
+
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDelete(task._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
     </div>
   );
 }
