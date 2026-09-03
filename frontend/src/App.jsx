@@ -17,6 +17,8 @@ function App() {
   const loadTasks = async () => {
     try {
       setError("");
+      setLoading(true);
+
       const response = await getTasks();
       setTasks(response.data);
     } catch (err) {
@@ -42,10 +44,14 @@ function App() {
       setError("");
 
       if (editingId) {
+        const currentTask = tasks.find(
+          (task) => task._id === editingId
+        );
+
         const response = await updateTask(editingId, {
           title: title.trim(),
           description: description.trim(),
-          completed: tasks.find((task) => task._id === editingId)?.completed || false
+          completed: currentTask?.completed || false
         });
 
         setTasks((currentTasks) =>
@@ -61,7 +67,10 @@ function App() {
           description: description.trim()
         });
 
-        setTasks((currentTasks) => [response.data, ...currentTasks]);
+        setTasks((currentTasks) => [
+          response.data,
+          ...currentTasks
+        ]);
       }
 
       setTitle("");
@@ -69,8 +78,8 @@ function App() {
     } catch (err) {
       setError(
         editingId
-          ? "Unable to update task."
-          : "Unable to create task."
+          ? "Unable to update task. Please try again."
+          : "Unable to create task. Please try again."
       );
     }
   };
@@ -105,7 +114,7 @@ function App() {
         )
       );
     } catch (err) {
-      setError("Unable to update task.");
+      setError("Unable to update task. Please try again.");
     }
   };
 
@@ -119,7 +128,7 @@ function App() {
         currentTasks.filter((task) => task._id !== id)
       );
     } catch (err) {
-      setError("Unable to delete task.");
+      setError("Unable to delete task. Please try again.");
     }
   };
 
@@ -127,7 +136,9 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <p className="app-label">TASK MANAGEMENT</p>
+
         <h1>Personal Task Manager</h1>
+
         <p className="app-subtitle">
           Organize your work and keep track of your daily tasks.
         </p>
@@ -135,7 +146,9 @@ function App() {
 
       <main>
         <form className="task-form" onSubmit={handleSubmit}>
-          <h2>{editingId ? "Edit Task" : "Add New Task"}</h2>
+          <h2>
+            {editingId ? "Edit Task" : "Add New Task"}
+          </h2>
 
           <input
             type="text"
@@ -147,7 +160,9 @@ function App() {
           <textarea
             placeholder="Enter task description"
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) =>
+              setDescription(event.target.value)
+            }
           />
 
           <button type="submit">
@@ -155,20 +170,35 @@ function App() {
           </button>
 
           {editingId && (
-            <button type="button" onClick={handleCancelEdit}>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+            >
               Cancel Edit
             </button>
           )}
         </form>
 
-        {loading && <p className="message">Loading tasks...</p>}
+        {loading && (
+          <div className="message">
+            <p>Loading your tasks...</p>
+          </div>
+        )}
 
-        {error && <p className="error-message">{error}</p>}
+        {error && (
+          <div className="error-message">
+            <strong>Something went wrong</strong>
+            <p>{error}</p>
+          </div>
+        )}
 
         {!loading && !error && tasks.length === 0 && (
           <div className="empty-state">
             <h2>No Tasks Yet</h2>
-            <p>Create your first task using the form above.</p>
+
+            <p>
+              Create your first task using the form above.
+            </p>
           </div>
         )}
 
@@ -176,8 +206,10 @@ function App() {
           <section className="task-section">
             <div className="section-header">
               <h2>Your Tasks</h2>
+
               <span>
-                {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+                {tasks.length} task
+                {tasks.length !== 1 ? "s" : ""}
               </span>
             </div>
 
@@ -192,19 +224,27 @@ function App() {
                   <div className="task-content">
                     <h3>{task.title}</h3>
 
-                    {task.description && <p>{task.description}</p>}
+                    {task.description && (
+                      <p>{task.description}</p>
+                    )}
 
                     <span className="task-status">
-                      {task.completed ? "Completed" : "Pending"}
+                      {task.completed
+                        ? "Completed"
+                        : "Pending"}
                     </span>
                   </div>
 
                   <div className="task-actions">
-                    <button onClick={() => handleEdit(task)}>
+                    <button
+                      onClick={() => handleEdit(task)}
+                    >
                       Edit
                     </button>
 
-                    <button onClick={() => handleToggle(task)}>
+                    <button
+                      onClick={() => handleToggle(task)}
+                    >
                       {task.completed
                         ? "Mark Pending"
                         : "Mark Completed"}
@@ -212,7 +252,9 @@ function App() {
 
                     <button
                       className="delete-button"
-                      onClick={() => handleDelete(task._id)}
+                      onClick={() =>
+                        handleDelete(task._id)
+                      }
                     >
                       Delete
                     </button>
