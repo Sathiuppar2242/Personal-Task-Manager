@@ -10,6 +10,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -40,18 +41,52 @@ function App() {
     try {
       setError("");
 
-      const response = await createTask({
-        title: title.trim(),
-        description: description.trim()
-      });
+      if (editingId) {
+        const response = await updateTask(editingId, {
+          title: title.trim(),
+          description: description.trim(),
+          completed: tasks.find((task) => task._id === editingId)?.completed || false
+        });
 
-      setTasks((currentTasks) => [response.data, ...currentTasks]);
+        setTasks((currentTasks) =>
+          currentTasks.map((task) =>
+            task._id === editingId ? response.data : task
+          )
+        );
+
+        setEditingId(null);
+      } else {
+        const response = await createTask({
+          title: title.trim(),
+          description: description.trim()
+        });
+
+        setTasks((currentTasks) => [response.data, ...currentTasks]);
+      }
 
       setTitle("");
       setDescription("");
     } catch (err) {
-      setError("Unable to create task.");
+      setError(
+        editingId
+          ? "Unable to update task."
+          : "Unable to create task."
+      );
     }
+  };
+
+  const handleEdit = (task) => {
+    setEditingId(task._id);
+    setTitle(task.title);
+    setDescription(task.description || "");
+    setError("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTitle("");
+    setDescription("");
+    setError("");
   };
 
   const handleToggle = async (task) => {
@@ -100,7 +135,7 @@ function App() {
 
       <main>
         <form className="task-form" onSubmit={handleSubmit}>
-          <h2>Add New Task</h2>
+          <h2>{editingId ? "Edit Task" : "Add New Task"}</h2>
 
           <input
             type="text"
@@ -115,7 +150,15 @@ function App() {
             onChange={(event) => setDescription(event.target.value)}
           />
 
-          <button type="submit">Add Task</button>
+          <button type="submit">
+            {editingId ? "Update Task" : "Add Task"}
+          </button>
+
+          {editingId && (
+            <button type="button" onClick={handleCancelEdit}>
+              Cancel Edit
+            </button>
+          )}
         </form>
 
         {loading && <p className="message">Loading tasks...</p>}
@@ -133,7 +176,9 @@ function App() {
           <section className="task-section">
             <div className="section-header">
               <h2>Your Tasks</h2>
-              <span>{tasks.length} task{tasks.length !== 1 ? "s" : ""}</span>
+              <span>
+                {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+              </span>
             </div>
 
             <div className="task-list">
@@ -147,9 +192,7 @@ function App() {
                   <div className="task-content">
                     <h3>{task.title}</h3>
 
-                    {task.description && (
-                      <p>{task.description}</p>
-                    )}
+                    {task.description && <p>{task.description}</p>}
 
                     <span className="task-status">
                       {task.completed ? "Completed" : "Pending"}
@@ -157,6 +200,10 @@ function App() {
                   </div>
 
                   <div className="task-actions">
+                    <button onClick={() => handleEdit(task)}>
+                      Edit
+                    </button>
+
                     <button onClick={() => handleToggle(task)}>
                       {task.completed
                         ? "Mark Pending"
